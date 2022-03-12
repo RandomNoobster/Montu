@@ -1,0 +1,3 @@
+# Ares
+
+War coordination bot.
