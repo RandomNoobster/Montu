@@ -18,7 +18,7 @@ bot = commands.Bot(command_prefix='$', intents=intents)
 @bot.event
 async def on_ready():
     print('Bot is ready')
-    await bot.change_presence(status=discord.Status.online, activity=discord.Game('$help'))
+    await bot.change_presence(status=discord.Status.online, activity=discord.Activity(type=discord.ActivityType.watching, name="your wars"))
     print('We have logged in as {0.user}'.format(bot))
 
 @bot.event
