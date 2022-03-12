@@ -17,11 +17,6 @@ class Military(commands.Cog):
         self.bot = bot
         self.bot.bg_task = self.bot.loop.create_task(self.wars())
 
-    @commands.command(brief='Debugging cmd, requires admin perms')
-    @commands.has_any_role('Cardinal', 'Pontifex Atomicus', 'Primus Inter Pares')
-    async def war_scanner(self, ctx):
-        await self.wars()
-
     async def add_to_thread(self, thread, atom_id: Union[str, int], atom: dict = None):
         await asyncio.sleep(1.1)
         person = utils.find_user(self, atom_id)
@@ -56,7 +51,7 @@ class Military(commands.Cog):
 
     async def wars(self):
         await self.bot.wait_until_ready()
-        channel = self.bot.get_channel(842115066424852510) ## 923249186500116560
+        channel = self.bot.get_channel(923249186500116560) ## 923249186500116560
         debug_channel = self.bot.get_channel(739155202640183377)
         prev_wars = None
 
