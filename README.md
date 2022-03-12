@@ -1,3 +1,3 @@
-# Ares
+# Montu
 
-War coordination bot.
+A bot for automatically managing war coordination threads.
