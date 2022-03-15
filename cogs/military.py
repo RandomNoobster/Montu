@@ -305,7 +305,7 @@ class Military(commands.Cog):
                     await thread.send(embed=embed)
                     mongo.war_logs.find_one_and_update({"id": war['id']}, {"$push": {"attacks": attack['id']}})
             else:
-                print("could not find or create thread", war, peace)
+                print("could not find or create thread", war['id'], peace)
 
         while True:
             try:
@@ -329,7 +329,7 @@ class Military(commands.Cog):
                     n = 1
                     done_wars = []
                     while has_more_pages:
-                        async with session.post(f"https://api.politicsandwar.com/graphql?api_key={api_key}", json={'query': f"{{wars(alliance_id:[4729,7531] page:{n} active:true){{paginatorInfo{{hasMorePages}} data{{id att_fortify war_type def_fortify attpeace defpeace turnsleft attacker{{nation_name leader_name alliance{{name}} id num_cities alliance_id cities{{id}}}} defender{{nation_name leader_name alliance{{name}} id num_cities alliance_id cities{{id}}}} attacks{{type id date loot_info victor moneystolen success cityid resistance_eliminated infradestroyed infra_destroyed_value improvementslost aircraft_killed_by_tanks attcas1 attcas2 defcas1 defcas2}}}}}}}}"}) as temp1:
+                        async with session.post(f"https://api.politicsandwar.com/graphql?api_key={api_key}", json={'query': f"{{wars(alliance_id:[4729,7531] page:{n} active:false){{paginatorInfo{{hasMorePages}} data{{id att_fortify war_type def_fortify attpeace defpeace turnsleft attacker{{nation_name leader_name alliance{{name}} id num_cities alliance_id cities{{id}}}} defender{{nation_name leader_name alliance{{name}} id num_cities alliance_id cities{{id}}}} attacks{{type id date loot_info victor moneystolen success cityid resistance_eliminated infradestroyed infra_destroyed_value improvementslost aircraft_killed_by_tanks attcas1 attcas2 defcas1 defcas2}}}}}}}}"}) as temp1:
                             n += 1
                             try:
                                 temp1 = (await temp.json())['data']['wars']['data']
@@ -351,7 +351,6 @@ class Military(commands.Cog):
                         attack_logs = mongo.war_logs.find_one({"id": new_war['id']})
                         if not attack_logs:
                             attack_logs = await cthread(new_war, non_atom, atom)
-                            print("making logs")
                         for old_war in prev_wars:
                             if new_war['id'] == old_war['id']:
                                 if new_war['attpeace'] and not old_war['attpeace']:
