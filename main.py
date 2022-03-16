@@ -2,14 +2,13 @@ from dotenv import load_dotenv
 import keep_alive
 import pymongo
 import os
-import ssl
 import discord
 from discord.ext import commands
 intents = discord.Intents.default()
 intents.members = True
 load_dotenv()
 
-client = pymongo.MongoClient(os.getenv("pymongolink"), ssl_cert_reqs=ssl.CERT_NONE)
+client = pymongo.MongoClient(os.getenv("pymongolink"))
 version = os.getenv("version")
 mongo = client[str(version)]
 
