@@ -397,7 +397,15 @@ class Military(commands.Cog):
                         for thread in channel.threads:
                             if f"({non_atom['id']})" in thread.name:
                                 await self.remove_from_thread(thread, atom['id'], atom)
-                                if thread.member_count <= 1:
+                                members = thread.fetch_members()
+                                member_count = 0
+                                for member in members:
+                                    user = await self.bot.fetch_user(member['id'])
+                                    if user.bot:
+                                        continue
+                                    else:
+                                        member_count += 1
+                                if member_count == 0:
                                     await thread.edit(archived=True)
                                 mongo.war_logs.find_one_and_update({"id": done_war['id']}, {"$set": {"finished": True}})
                                 break
