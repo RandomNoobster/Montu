@@ -7,10 +7,9 @@ from typing import Union, Tuple
 import aiohttp
 import re
 import pymongo
-import ssl
 import os
 
-client = pymongo.MongoClient(os.getenv("pymongolink"), ssl_cert_reqs=ssl.CERT_NONE)
+client = pymongo.MongoClient(os.getenv("pymongolink"))
 version = os.getenv("version")
 mongo = client[str(version)]
 api_key = os.getenv("api_key")
