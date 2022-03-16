@@ -1,6 +1,6 @@
 import discord
 from main import mongo
-from datetime import datetime
+from datetime import datetime, timezone
 from discord.ext import commands
 import aiohttp
 import traceback
@@ -51,7 +51,8 @@ class Military(commands.Cog):
 
     async def wars(self):
         await self.bot.wait_until_ready()
-        channel = self.bot.get_channel(923249186500116560) ## 923249186500116560
+        channel_id = int(os.getenv("channel_id"))
+        channel = self.bot.get_channel(channel_id)
         debug_channel = self.bot.get_channel(739155202640183377)
         prev_wars = None
 
@@ -313,7 +314,7 @@ class Military(commands.Cog):
                     has_more_pages = True
                     n = 1
                     while has_more_pages:
-                        async with session.post(f"https://api.politicsandwar.com/graphql?api_key={api_key}", json={'query': f"{{wars(alliance_id:[4729,7531] page:{n} active:true){{paginatorInfo{{hasMorePages}} data{{id att_fortify war_type def_fortify attpeace defpeace turnsleft attacker{{nation_name leader_name alliance{{name}} id num_cities alliance_id cities{{id}}}} defender{{nation_name leader_name alliance{{name}} id num_cities alliance_id cities{{id}}}} attacks{{type id date loot_info victor moneystolen success cityid resistance_eliminated infradestroyed infra_destroyed_value improvementslost aircraft_killed_by_tanks attcas1 attcas2 defcas1 defcas2}}}}}}}}"}) as temp:
+                        async with session.post(f"https://api.politicsandwar.com/graphql?api_key={api_key}", json={'query': f"{{wars(alliance_id:[4729,7531] page:{n} active:true){{paginatorInfo{{hasMorePages}} data{{id att_fortify war_type def_fortify attpeace defpeace turnsleft att_alliance_id def_alliance_id attacker{{nation_name leader_name alliance{{name}} id num_cities cities{{id}}}} defender{{nation_name leader_name alliance{{name}} id num_cities cities{{id}}}} attacks{{type id date loot_info victor moneystolen success cityid resistance_eliminated infradestroyed infra_destroyed_value improvementslost aircraft_killed_by_tanks attcas1 attcas2 defcas1 defcas2}}}}}}}}"}) as temp:
                             n += 1
                             try:
                                 wars = (await temp.json())['data']['wars']['data']
@@ -327,22 +328,24 @@ class Military(commands.Cog):
                                 continue
                     has_more_pages = True
                     n = 1
+                    min_id = 0
                     done_wars = []
                     while has_more_pages:
-                        async with session.post(f"https://api.politicsandwar.com/graphql?api_key={api_key}", json={'query': f"{{wars(alliance_id:[4729,7531] page:{n} active:false){{paginatorInfo{{hasMorePages}} data{{id att_fortify war_type def_fortify attpeace defpeace turnsleft attacker{{nation_name leader_name alliance{{name}} id num_cities alliance_id cities{{id}}}} defender{{nation_name leader_name alliance{{name}} id num_cities alliance_id cities{{id}}}} attacks{{type id date loot_info victor moneystolen success cityid resistance_eliminated infradestroyed infra_destroyed_value improvementslost aircraft_killed_by_tanks attcas1 attcas2 defcas1 defcas2}}}}}}}}"}) as temp1:
+                        async with session.post(f"https://api.politicsandwar.com/graphql?api_key={api_key}", json={'query': f"{{wars(alliance_id:[4729,7531] page:{n} min_id:{min_id} active:false orderBy:{{column: ID order:ASC}}){{paginatorInfo{{hasMorePages}} data{{id att_fortify war_type def_fortify attpeace defpeace turnsleft att_alliance_id def_alliance_id attacker{{nation_name leader_name alliance{{name}} id num_cities cities{{id}}}} defender{{nation_name leader_name alliance{{name}} id num_cities cities{{id}}}} attacks{{type id date loot_info victor moneystolen success cityid resistance_eliminated infradestroyed infra_destroyed_value improvementslost aircraft_killed_by_tanks attcas1 attcas2 defcas1 defcas2}}}}}}}}"}) as temp1:
                             n += 1
                             try:
-                                temp1 = (await temp.json())['data']['wars']['data']
-                                has_more_pages = (await temp.json())['data']['wars']['paginatorInfo']['hasMorePages']
-                                for war in temp1:
+                                all_wars = (await temp1.json())['data']['wars']['data']
+                                has_more_pages = (await temp1.json())['data']['wars']['paginatorInfo']['hasMorePages']
+                                for war in all_wars:
                                     if war['turnsleft'] <= 0:
                                         done_wars.append(war)
                             except:
                                 print((await temp1.json())['errors'])
                                 await asyncio.sleep(60)
                                 continue
+                    print(len(done_wars))
                     for new_war in wars:
-                        if new_war['attacker']['alliance_id'] in ['4729', '7531']: ## CHANGE T0 ATOM ---------------------------------------------------------
+                        if new_war['att_alliance_id'] in ['4729', '7531']: ## CHANGE T0 ATOM ---------------------------------------------------------
                             atom = new_war['attacker']
                             non_atom = new_war['defender']
                         else:
@@ -365,7 +368,7 @@ class Military(commands.Cog):
                                 attacker = await attack_check(attack, new_war)
                                 await smsg(attacker, attack, new_war, atom, non_atom, None)
                     for done_war in done_wars:
-                        if done_war['attacker']['alliance_id'] in ['4729', '7531']: ## CHANGE T0 ATOM ---------------------------------------------------------
+                        if done_war['att_alliance_id'] in ['4729', '7531']: ## CHANGE T0 ATOM ---------------------------------------------------------
                             atom = done_war['attacker']
                             non_atom = done_war['defender']
                         else:
@@ -381,10 +384,10 @@ class Military(commands.Cog):
                                 attacker = await attack_check(attack, done_war)
                                 await smsg(attacker, attack, done_war, atom, non_atom, None)
                         if len(done_war['attacks']) == 0:
-                            attack = {"type": "EXPIRATION", "id": -1, "date": datetime.strftime(datetime.utcnow(), '%Y-%m-%d %H:%M:%S%z')}
+                            attack = {"type": "EXPIRATION", "id": -1, "date": datetime.strftime(datetime.utcnow().replace(tzinfo=timezone.utc), '%Y-%m-%d %H:%M:%S%z')}
                             await smsg(None, attack, done_war, atom, non_atom, None)
                         elif done_war['attacks'][-1]['type'] not in ["PEACE", "VICTORY", "ALLIANCELOOT"]:
-                            attack = {"type": "EXPIRATION", "id": -1, "date": datetime.strftime(datetime.utcnow(), '%Y-%m-%d %H:%M:%S%z')}
+                            attack = {"type": "EXPIRATION", "id": -1, "date": datetime.strftime(datetime.utcnow().replace(tzinfo=timezone.utc), '%Y-%m-%d %H:%M:%S%z')}
                             await smsg(None, attack, done_war, atom, non_atom, None)
                         for thread in channel.threads:
                             if f"({non_atom['id']})" in thread.name:
@@ -393,6 +396,8 @@ class Military(commands.Cog):
                                     await thread.edit(archived=True)
                                 mongo.war_logs.find_one_and_update({"id": done_war['id']}, {"$set": {"finished": True}})
                                 break
+                if len(done_wars) > 0:
+                    min_id = done_wars[0]['id']
                 prev_wars = wars
                 await asyncio.sleep(60)
             except:
