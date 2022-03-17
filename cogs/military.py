@@ -311,6 +311,7 @@ class Military(commands.Cog):
             else:
                 print("could not find or create thread", war['id'], peace)
 
+        min_id = 0
         while True:
             try:
                 async with aiohttp.ClientSession() as session:
@@ -331,7 +332,6 @@ class Military(commands.Cog):
                                 continue
                     has_more_pages = True
                     n = 1
-                    min_id = 0
                     done_wars = []
                     while has_more_pages:
                         async with session.post(f"https://api.politicsandwar.com/graphql?api_key={api_key}", json={'query': f"{{wars(alliance_id:[4729,7531] page:{n} min_id:{min_id} active:false orderBy:{{column: ID order:DESC}}){{paginatorInfo{{hasMorePages}} data{{id att_fortify war_type def_fortify attpeace defpeace turnsleft date att_alliance_id def_alliance_id attacker{{nation_name leader_name alliance{{name}} id num_cities cities{{id}}}} defender{{nation_name leader_name alliance{{name}} id num_cities cities{{id}}}} attacks{{type id date loot_info victor moneystolen success cityid resistance_eliminated infradestroyed infra_destroyed_value improvementslost aircraft_killed_by_tanks attcas1 attcas2 defcas1 defcas2}}}}}}}}"}) as temp1:
