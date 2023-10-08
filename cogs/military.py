@@ -11,6 +11,7 @@ import os
 
 api_key = os.getenv("api_key")
 
+
 class Military(commands.Cog):
 
     def __init__(self, bot):
@@ -32,7 +33,7 @@ class Military(commands.Cog):
             await thread.add_user(user)
         except Exception as e:
             await thread.send(f"I was unable to add {user} to the thread.\n```{e}```")
-    
+
     async def remove_from_thread(self, thread, atom_id: Union[str, int], atom: dict = None):
         await asyncio.sleep(1.1)
         person = utils.find_user(self, atom_id)
@@ -58,11 +59,13 @@ class Military(commands.Cog):
 
         async def cthread(war, non_atom, atom):
             await asyncio.sleep(1.1)
-            attack_logs = {"id": war['id'], "attacks": [], "detected": datetime.utcnow(), "finished": False}
+            attack_logs = {"id": war['id'], "attacks": [
+            ], "detected": datetime.utcnow(), "finished": False}
             mongo.war_logs.insert_one(attack_logs)
 
             url = f"https://politicsandwar.com/nation/war/timeline/war={war['id']}"
-            embed = discord.Embed(title=f"New {war['war_type'].lower().capitalize()} War", url=url, description=f"[{war['attacker']['nation_name']}](https://politicsandwar.com/nation/id={war['attacker']['id']}) declared a{'n'[:(len(war['war_type'])-5)^1]} {war['war_type'].lower()} war on [{war['defender']['nation_name']}](https://politicsandwar.com/nation/id={war['defender']['id']})", color=0x2F3136)
+            embed = discord.Embed(title=f"New {war['war_type'].lower().capitalize()} War", url=url,
+                                  description=f"[{war['attacker']['nation_name']}](https://politicsandwar.com/nation/id={war['attacker']['id']}) declared a{'n'[:(len(war['war_type'])-5)^1]} {war['war_type'].lower()} war on [{war['defender']['nation_name']}](https://politicsandwar.com/nation/id={war['defender']['id']})", color=0x2F3136)
             name = f"{non_atom['nation_name']} ({non_atom['id']})"
             found = False
 
@@ -101,22 +104,24 @@ class Military(commands.Cog):
             elif attack['success'] > 0:
                 attacker = attack['victor']
             else:
-                attacker = [new_war['attacker']['id'], new_war['defender']['id']]
+                attacker = [new_war['attacker']
+                            ['id'], new_war['defender']['id']]
                 attacker.remove(attack['victor'])
                 attacker = attacker[0]
             return attacker
 
         async def smsg(attacker_id, attack, war, atom, non_atom, peace):
             await asyncio.sleep(1.1)
-            embed = discord.Embed(title=f"New {war['war_type'].lower().capitalize()} War", description=f"[{war['attacker']['nation_name']}](https://politicsandwar.com/nation/id={war['attacker']['id']}) declared a{'n'[:(len(war['war_type'])-5)^1]} {war['war_type'].lower()} war on [{war['defender']['nation_name']}](https://politicsandwar.com/nation/id={war['defender']['id']})", color=0x2F3136)
-            
+            embed = discord.Embed(title=f"New {war['war_type'].lower().capitalize()} War",
+                                  description=f"[{war['attacker']['nation_name']}](https://politicsandwar.com/nation/id={war['attacker']['id']}) declared a{'n'[:(len(war['war_type'])-5)^1]} {war['war_type'].lower()} war on [{war['defender']['nation_name']}](https://politicsandwar.com/nation/id={war['defender']['id']})", color=0x2F3136)
+
             found = False
             for thread in channel.threads:
                 if f"({non_atom['id']})" in thread.name:
                     matching_thread = thread
                     found = True
                     break
-            
+
             if not found:
                 async for thread in channel.archived_threads():
                     if f"({non_atom['id']})" in thread.name:
@@ -124,7 +129,8 @@ class Military(commands.Cog):
                         found = True
                         person = utils.find_user(self, atom['id'])
                         if not person:
-                            print("tried to add to archived thread, but could not find", atom['id'])
+                            print(
+                                "tried to add to archived thread, but could not find", atom['id'])
                             await thread.send(f"I was unable to add nation {atom['id']} to the thread. Have they not linked their nation with their discord account?")
                             break
                         user = await self.bot.fetch_user(person['user'])
@@ -133,7 +139,7 @@ class Military(commands.Cog):
                         except:
                             pass
                         break
-            
+
             if not found:
                 print("making thread")
                 await cthread(war, non_atom, atom)
@@ -143,12 +149,13 @@ class Military(commands.Cog):
                         matching_thread = thread
                         found = True
                         break
-                
+
             if found:
                 thread = matching_thread
                 url = f"https://politicsandwar.com/nation/war/timeline/war={war['id']}"
                 if peace != None:
-                    embed = discord.Embed(title="Peace offering", url=url, description=f"[{peace['offerer']['nation_name']}](https://politicsandwar.com/nation/id={peace['offerer']['id']}) is offering peace to [{peace['reciever']['nation_name']}](https://politicsandwar.com/nation/id={peace['reciever']['id']}). The peace offering will be canceled if either side performs an act of aggression.", color=0xffffff)
+                    embed = discord.Embed(
+                        title="Peace offering", url=url, description=f"[{peace['offerer']['nation_name']}](https://politicsandwar.com/nation/id={peace['offerer']['id']}) is offering peace to [{peace['reciever']['nation_name']}](https://politicsandwar.com/nation/id={peace['reciever']['id']}). The peace offering will be canceled if either side performs an act of aggression.", color=0xffffff)
                     await thread.send(embed=embed)
                     return
                 footer = f"<t:{round(datetime.strptime(attack['date'], '%Y-%m-%d %H:%M:%S%z').timestamp())}:R> <t:{round(datetime.strptime(attack['date'], '%Y-%m-%d %H:%M:%S%z').timestamp())}>"
@@ -220,12 +227,17 @@ class Military(commands.Cog):
                         except:
                             daa_link = "No alliance"
 
-                        embed = discord.Embed(title=title, description=description, color=colors[attack['success']], url=url)
-                        embed.add_field(name=f"Attacker", value=f"[{attacker_nation['nation_name']}](https://politicsandwar.com/nation/id={attacker_nation['id']})\n{aaa_link}\n\n**Casualties**:\n{att_casualties}")
-                        embed.add_field(name=f"Defender", value=f"[{defender_nation['nation_name']}](https://politicsandwar.com/nation/id={defender_nation['id']})\n{daa_link}\n\n**Casualties**:\n{def_casualties}")
-                        embed.add_field(name="\u200b", value=footer, inline=False)
+                        embed = discord.Embed(
+                            title=title, description=description, color=colors[attack['success']], url=url)
+                        embed.add_field(
+                            name=f"Attacker", value=f"[{attacker_nation['nation_name']}](https://politicsandwar.com/nation/id={attacker_nation['id']})\n{aaa_link}\n\n**Casualties**:\n{att_casualties}")
+                        embed.add_field(
+                            name=f"Defender", value=f"[{defender_nation['nation_name']}](https://politicsandwar.com/nation/id={defender_nation['id']})\n{daa_link}\n\n**Casualties**:\n{def_casualties}")
+                        embed.add_field(
+                            name="\u200b", value=footer, inline=False)
                         await thread.send(embed=embed)
-                        mongo.war_logs.find_one_and_update({"id": war['id']}, {"$push": {"attacks": attack['id']}})
+                        mongo.war_logs.find_one_and_update(
+                            {"id": war['id']}, {"$push": {"attacks": attack['id']}})
                     elif attack['type'] in ["PEACE", "VICTORY", "ALLIANCELOOT", "EXPIRATION"]:
                         if attack['type'] == "PEACE":
                             title = "White peace"
@@ -238,7 +250,8 @@ class Military(commands.Cog):
                             else:
                                 title = "Defeat"
                                 color = 0xff0000
-                            loot = attack['loot_info'].replace('\r\n                            ', '')
+                            loot = attack['loot_info'].replace(
+                                '\r\n                            ', '')
                             content = f"[{war['attacker']['nation_name']}](https://politicsandwar.com/nation/id={war['attacker']['id']}) is no longer fighting an offensive war against [{war['defender']['nation_name']}](https://politicsandwar.com/nation/id={war['defender']['id']}).\n\n{loot}"
                         elif attack['type'] == "ALLIANCELOOT":
                             if atom['nation_name'] in attack['loot_info']:
@@ -246,16 +259,20 @@ class Military(commands.Cog):
                             else:
                                 color = 0xff0000
                             title = "Alliance loot"
-                            loot = attack['loot_info'].replace('\r\n                            ', '')
+                            loot = attack['loot_info'].replace(
+                                '\r\n                            ', '')
                             content = f"{loot}"
                         elif attack['type'] == "EXPIRATION":
                             title = "War expiration"
                             color = 0xffFFff
                             content = f"The war has lasted 5 days, and has consequently expired. [{war['attacker']['nation_name']}](https://politicsandwar.com/nation/id={war['attacker']['id']}) is no longer fighting an offensive war against [{war['defender']['nation_name']}](https://politicsandwar.com/nation/id={war['defender']['id']})."
-                        embed = discord.Embed(title=title, url=url, description=content, color=color)
-                        embed.add_field(name="\u200b", value=footer, inline=False)
+                        embed = discord.Embed(
+                            title=title, url=url, description=content, color=color)
+                        embed.add_field(
+                            name="\u200b", value=footer, inline=False)
                         await thread.send(embed=embed)
-                        mongo.war_logs.find_one_and_update({"id": war['id']}, {"$push": {"attacks": attack['id']}})
+                        mongo.war_logs.find_one_and_update(
+                            {"id": war['id']}, {"$push": {"attacks": attack['id']}})
                     else:
                         for nation in [war['attacker'], war['defender']]:
                             if nation['id'] == attacker_id:
@@ -270,7 +287,7 @@ class Military(commands.Cog):
                         if attack['type'] == "MISSILE":
                             title = "Missile"
                             content = f"[{attacker_nation['nation_name']}](https://politicsandwar.com/nation/id={attacker_nation['id']}) launched a missile upon [{defender_nation['nation_name']}](https://politicsandwar.com/nation/id={defender_nation['id']}), destroying {attack['infradestroyed']} infra (${attack['infra_destroyed_value']:,}) and {attack['improvementslost']} improvement{'s'[:attack['improvementslost']^1]}."
-                        elif attack ['type'] == "MISSILEFAIL":
+                        elif attack['type'] == "MISSILEFAIL":
                             title = "Failed missile"
                             content = f"[{attacker_nation['nation_name']}](https://politicsandwar.com/nation/id={attacker_nation['id']}) launched a missile upon [{defender_nation['nation_name']}](https://politicsandwar.com/nation/id={defender_nation['id']}), but the missile was shot down."
                         elif attack['type'] == "NUKE":
@@ -279,11 +296,14 @@ class Military(commands.Cog):
                         elif attack['type'] == "NUKEFAIL":
                             title = "Failed nuke"
                             content = f"[{attacker_nation['nation_name']}](https://politicsandwar.com/nation/id={attacker_nation['id']}) launched a nuclear weapon upon [{defender_nation['nation_name']}](https://politicsandwar.com/nation/id={defender_nation['id']}), but the nuke was shot down."
-                    
-                        embed = discord.Embed(title=title, url=url, description=content, color=colors[attack['success']])
-                        embed.add_field(name="\u200b", value=footer, inline=False)
+
+                        embed = discord.Embed(
+                            title=title, url=url, description=content, color=colors[attack['success']])
+                        embed.add_field(
+                            name="\u200b", value=footer, inline=False)
                         await thread.send(embed=embed)
-                        mongo.war_logs.find_one_and_update({"id": war['id']}, {"$push": {"attacks": attack['id']}})
+                        mongo.war_logs.find_one_and_update(
+                            {"id": war['id']}, {"$push": {"attacks": attack['id']}})
                 else:
                     if war['att_fortify'] and war['def_fortify']:
                         content = f"{war['attacker']['nation_name']} and {war['defender']['nation_name']} are now fortified."
@@ -303,11 +323,13 @@ class Military(commands.Cog):
                     else:
                         content = f"{war['attacker']['nation_name']} or {war['defender']['nation_name']} fortified (idk who due to api limitations), then subsequently attacked, losing the fortified effect."
                         color = 0xffffff
-                    
-                    embed = discord.Embed(title="Fortification", url=url, description=content, color=color)
+
+                    embed = discord.Embed(
+                        title="Fortification", url=url, description=content, color=color)
                     embed.add_field(name="\u200b", value=footer, inline=False)
                     await thread.send(embed=embed)
-                    mongo.war_logs.find_one_and_update({"id": war['id']}, {"$push": {"attacks": attack['id']}})
+                    mongo.war_logs.find_one_and_update(
+                        {"id": war['id']}, {"$push": {"attacks": attack['id']}})
             else:
                 print("could not find or create thread", war['id'], peace)
 
@@ -318,7 +340,7 @@ class Military(commands.Cog):
                     has_more_pages = True
                     n = 1
                     while has_more_pages:
-                        async with session.post(f"https://api.politicsandwar.com/graphql?api_key={api_key}", json={'query': f"{{wars(alliance_id:[4729,7531] page:{n} active:true){{paginatorInfo{{hasMorePages}} data{{id att_fortify war_type def_fortify attpeace defpeace turnsleft date att_alliance_id def_alliance_id attacker{{nation_name leader_name alliance{{name}} id num_cities cities{{id}}}} defender{{nation_name leader_name alliance{{name}} id num_cities cities{{id}}}} attacks{{type id date loot_info victor moneystolen success cityid resistance_eliminated infradestroyed infra_destroyed_value improvementslost aircraft_killed_by_tanks attcas1 attcas2 defcas1 defcas2}}}}}}}}"}) as temp:
+                        async with session.post(f"https://api.politicsandwar.com/graphql?api_key={api_key}", json={'query': f"{{wars(alliance_id:[4729,8819] page:{n} active:true){{paginatorInfo{{hasMorePages}} data{{id att_fortify war_type def_fortify attpeace defpeace turnsleft date att_alliance_id def_alliance_id attacker{{nation_name leader_name alliance{{name}} id num_cities cities{{id}}}} defender{{nation_name leader_name alliance{{name}} id num_cities cities{{id}}}} attacks{{type id date loot_info victor moneystolen success cityid resistance_eliminated infradestroyed infra_destroyed_value improvementslost aircraft_killed_by_tanks attcas1 attcas2 defcas1 defcas2}}}}}}}}"}) as temp:
                             n += 1
                             try:
                                 wars = (await temp.json())['data']['wars']['data']
@@ -334,14 +356,15 @@ class Military(commands.Cog):
                     n = 1
                     done_wars = []
                     while has_more_pages:
-                        async with session.post(f"https://api.politicsandwar.com/graphql?api_key={api_key}", json={'query': f"{{wars(alliance_id:[4729,7531] page:{n} min_id:{min_id} active:false orderBy:{{column: ID order:DESC}}){{paginatorInfo{{hasMorePages}} data{{id att_fortify war_type def_fortify attpeace defpeace turnsleft date att_alliance_id def_alliance_id attacker{{nation_name leader_name alliance{{name}} id num_cities cities{{id}}}} defender{{nation_name leader_name alliance{{name}} id num_cities cities{{id}}}} attacks{{type id date loot_info victor moneystolen success cityid resistance_eliminated infradestroyed infra_destroyed_value improvementslost aircraft_killed_by_tanks attcas1 attcas2 defcas1 defcas2}}}}}}}}"}) as temp1:
+                        async with session.post(f"https://api.politicsandwar.com/graphql?api_key={api_key}", json={'query': f"{{wars(alliance_id:[4729,8819] page:{n} min_id:{min_id} active:false orderBy:{{column: ID order:DESC}}){{paginatorInfo{{hasMorePages}} data{{id att_fortify war_type def_fortify attpeace defpeace turnsleft date att_alliance_id def_alliance_id attacker{{nation_name leader_name alliance{{name}} id num_cities cities{{id}}}} defender{{nation_name leader_name alliance{{name}} id num_cities cities{{id}}}} attacks{{type id date loot_info victor moneystolen success cityid resistance_eliminated infradestroyed infra_destroyed_value improvementslost aircraft_killed_by_tanks attcas1 attcas2 defcas1 defcas2}}}}}}}}"}) as temp1:
                             n += 1
                             try:
                                 all_wars = (await temp1.json())['data']['wars']['data']
                                 has_more_pages = (await temp1.json())['data']['wars']['paginatorInfo']['hasMorePages']
                                 for war in all_wars:
                                     if war['turnsleft'] <= 0:
-                                        declaration = datetime.strptime(war['date'], '%Y-%m-%d %H:%M:%S%z').replace(tzinfo=None)
+                                        declaration = datetime.strptime(
+                                            war['date'], '%Y-%m-%d %H:%M:%S%z').replace(tzinfo=None)
                                         if (datetime.utcnow() - declaration).days <= 5:
                                             done_wars.append(war)
                             except:
@@ -350,22 +373,26 @@ class Military(commands.Cog):
                                 continue
                     print(len(done_wars))
                     for new_war in wars:
-                        if new_war['att_alliance_id'] in ['4729', '7531']: ## CHANGE T0 ATOM ---------------------------------------------------------
+                        # CHANGE T0 ATOM ---------------------------------------------------------
+                        if new_war['att_alliance_id'] in ['4729', '8819']:
                             atom = new_war['attacker']
                             non_atom = new_war['defender']
                         else:
                             atom = new_war['defender']
                             non_atom = new_war['attacker']
-                        attack_logs = mongo.war_logs.find_one({"id": new_war['id']})
+                        attack_logs = mongo.war_logs.find_one(
+                            {"id": new_war['id']})
                         if not attack_logs:
                             attack_logs = await cthread(new_war, non_atom, atom)
                         for old_war in prev_wars:
                             if new_war['id'] == old_war['id']:
                                 if new_war['attpeace'] and not old_war['attpeace']:
-                                    peace_obj = {"offerer": new_war['attacker'], "reciever": new_war['defender']}
+                                    peace_obj = {
+                                        "offerer": new_war['attacker'], "reciever": new_war['defender']}
                                     await smsg(None, None, new_war, atom, non_atom, peace_obj)
                                 elif new_war['defpeace'] and not old_war['defpeace']:
-                                    peace_obj = {"offerer": new_war['defender'], "reciever": new_war['attacker']}
+                                    peace_obj = {
+                                        "offerer": new_war['defender'], "reciever": new_war['attacker']}
                                     await smsg(None, None, new_war, atom, non_atom, peace_obj)
                                 break
                         for attack in new_war['attacks']:
@@ -373,13 +400,15 @@ class Military(commands.Cog):
                                 attacker = await attack_check(attack, new_war)
                                 await smsg(attacker, attack, new_war, atom, non_atom, None)
                     for done_war in done_wars:
-                        if done_war['att_alliance_id'] in ['4729', '7531']: ## CHANGE T0 ATOM ---------------------------------------------------------
+                        # CHANGE T0 ATOM ---------------------------------------------------------
+                        if done_war['att_alliance_id'] in ['4729', '8819']:
                             atom = done_war['attacker']
                             non_atom = done_war['defender']
                         else:
                             atom = done_war['defender']
                             non_atom = done_war['attacker']
-                        attack_logs = mongo.war_logs.find_one({"id": done_war['id']})
+                        attack_logs = mongo.war_logs.find_one(
+                            {"id": done_war['id']})
                         if not attack_logs:
                             attack_logs = await cthread(done_war, non_atom, atom)
                         elif attack_logs['finished']:
@@ -389,10 +418,12 @@ class Military(commands.Cog):
                                 attacker = await attack_check(attack, done_war)
                                 await smsg(attacker, attack, done_war, atom, non_atom, None)
                         if len(done_war['attacks']) == 0:
-                            attack = {"type": "EXPIRATION", "id": -1, "date": datetime.strftime(datetime.utcnow().replace(tzinfo=timezone.utc), '%Y-%m-%d %H:%M:%S%z')}
+                            attack = {"type": "EXPIRATION", "id": -1, "date": datetime.strftime(
+                                datetime.utcnow().replace(tzinfo=timezone.utc), '%Y-%m-%d %H:%M:%S%z')}
                             await smsg(None, attack, done_war, atom, non_atom, None)
                         elif done_war['attacks'][-1]['type'] not in ["PEACE", "VICTORY", "ALLIANCELOOT"]:
-                            attack = {"type": "EXPIRATION", "id": -1, "date": datetime.strftime(datetime.utcnow().replace(tzinfo=timezone.utc), '%Y-%m-%d %H:%M:%S%z')}
+                            attack = {"type": "EXPIRATION", "id": -1, "date": datetime.strftime(
+                                datetime.utcnow().replace(tzinfo=timezone.utc), '%Y-%m-%d %H:%M:%S%z')}
                             await smsg(None, attack, done_war, atom, non_atom, None)
                         for thread in channel.threads:
                             if f"({non_atom['id']})" in thread.name:
@@ -407,7 +438,8 @@ class Military(commands.Cog):
                                         member_count += 1
                                 if member_count == 0:
                                     await thread.edit(archived=True)
-                                mongo.war_logs.find_one_and_update({"id": done_war['id']}, {"$set": {"finished": True}})
+                                mongo.war_logs.find_one_and_update(
+                                    {"id": done_war['id']}, {"$set": {"finished": True}})
                                 break
                 if len(done_wars) > 0:
                     min_id = done_wars[0]['id']
@@ -415,6 +447,7 @@ class Military(commands.Cog):
                 await asyncio.sleep(60)
             except:
                 await debug_channel.send(f"I encountered an error whilst scanning for wars:```{traceback.format_exc()}```")
+
 
 def setup(bot):
     bot.add_cog(Military(bot))
